@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"syscall"
-	"fmt"
-	"log"
 )
 
 //docker run bash
@@ -37,19 +37,19 @@ func run() {
 }
 
 func child() {
-	cmd := exec.Command(os.Args[2], os.Args[3:]...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+
 	fmt.Println("S pid is:", syscall.Getpid())
 
 	syscall.Chroot("/home/jin/Desktop/rootfs/")
 	os.Chdir("/")
 	syscall.Mount("proc", "proc", "proc", 0, "")
-	HandlErr(cmd.Run())
-
+	path, err := exec.LookPath(os.Args[2])
+	HandlErr(err)
+	HandlErr(syscall.Exec(path, append([]string{path}, os.Args[3:]...), os.Environ()))
 }
 
 func HandlErr(err error) {
-	log.Fatal(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
